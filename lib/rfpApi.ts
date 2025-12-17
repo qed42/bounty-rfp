@@ -1,44 +1,46 @@
-export function buildRfpQuery(filters: any) {
+import { Option } from "./locationApi";
+
+interface RfpQueryFilters {
+  keyword?: string;
+  min_budget?: number;
+  country?: Option[];
+  rfp_type?: Option[];
+  tech_stack?: Option[];
+  portal_names?: Option[];
+  deadline_days?: number;
+  skip?: number;
+  limit?: number;
+}
+
+export function buildRfpQuery(filters: RfpQueryFilters): string {
   const params = new URLSearchParams();
 
-  const extractValues = (arr?: { value: string }[]) =>
-    arr?.map((o) => o.value) || [];
+  const values = (arr?: Option[]) => arr?.map((o) => o.value) ?? [];
 
-  // Portals
-  const portals = extractValues(filters.portal_names);
-  if (portals.length) {
-    params.set("portal_names", portals.join(","));
+  if (values(filters.portal_names).length) {
+    params.set("portal_names", values(filters.portal_names).join(","));
   }
 
-  // Country (location)
-  const countries = extractValues(filters.country);
-  if (countries.length) {
-    params.set("location", countries.join(","));
+  if (values(filters.country).length) {
+    params.set("location", values(filters.country).join(","));
   }
 
-  // RFP Type
-  const rfpTypes = extractValues(filters.rfp_type);
-  if (rfpTypes.length) {
-    params.set("rfp_type", rfpTypes.join(","));
+  if (values(filters.rfp_type).length) {
+    params.set("rfp_type", values(filters.rfp_type).join(","));
   }
 
-  // Tech Stack
-  const tech = extractValues(filters.tech_stack);
-  if (tech.length) {
-    params.set("keywords", tech.join(","));
+  if (values(filters.tech_stack).length) {
+    params.set("keywords", values(filters.tech_stack).join(","));
   }
 
-  // Keyword
   if (filters.keyword) {
     params.set("search", filters.keyword);
   }
 
-  // Budget
   if (filters.min_budget) {
     params.set("min_cost", String(filters.min_budget));
   }
 
-  // Deadline
   if (filters.deadline_days) {
     const today = new Date();
     const future = new Date();
@@ -48,9 +50,8 @@ export function buildRfpQuery(filters: any) {
     params.set("deadline_to", future.toISOString().split("T")[0]);
   }
 
-  // Pagination
-  params.set("skip", String(filters.skip || 0));
-  params.set("limit", String(filters.limit || 9));
+  params.set("skip", String(filters.skip ?? 0));
+  params.set("limit", String(filters.limit ?? 9));
 
   return params.toString();
 }

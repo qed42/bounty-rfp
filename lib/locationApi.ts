@@ -1,37 +1,51 @@
 // locationApi.ts
 
-// Define the required structure for react-select options
+// Structure required by react-select
 export type Option = {
   label: string;
   value: string;
 };
 
+// Minimal shape of RFP item needed for country extraction
+type RfpItem = {
+  location?: string | null;
+};
+
 export async function fetchCountries(): Promise<Option[]> {
-  // Fetch data from the API endpoint
-  const res = await fetch(
-    "http://65.2.128.237:8000/api/v1/rfps/?limit=500"
-  );
-  
-  if (!res.ok) {
-    console.error("Failed to fetch RFPs data:", res.statusText);
+  try {
+    const res = await fetch(
+      "http://65.2.128.237:8000/api/v1/rfps/?limit=500"
+    );
+
+    if (!res.ok) {
+      console.error("Failed to fetch RFPs data:", res.statusText);
+      return [];
+    }
+
+    const data: RfpItem[] = await res.json();
+
+    // Extract country names from location field
+    const countryNames: string[] = data
+      .map((item) => item.location)
+      .filter((loc): loc is string => Boolean(loc))
+      .map((loc) => loc.split(",")[0].trim());
+
+    // Remove duplicates and sort
+    const uniqueCountryNames = Array.from(
+      new Set(countryNames)
+    ).sort();
+
+    // Convert to react-select options
+    const countries: Option[] = uniqueCountryNames.map(
+      (name) => ({
+        label: name,
+        value: name,
+      })
+    );
+
+    return countries;
+  } catch (error) {
+    console.error("Error fetching countries:", error);
     return [];
   }
-  
-  const data = await res.json();
-
-  // 1. Extract location, filter out null/empty values, and grab the first part (country)
-  const countryNames: string[] = data.map((item: any) => item.location)
-    .filter(Boolean)
-    .map((loc: string) => loc.split(",")[0].trim());
-
-  // 2. Get unique country names and sort them
-  const uniqueCountryNames = Array.from(new Set(countryNames)).sort();
-
-  // 3. Map the string names into the required { label, value } Option format
-  const countries: Option[] = uniqueCountryNames.map(name => ({
-    label: name,
-    value: name, // Use the name as both label and value
-  }));
-
-  return countries;
 }

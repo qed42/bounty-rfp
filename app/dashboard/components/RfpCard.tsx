@@ -1,18 +1,32 @@
 import { useState } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export function RfpCard({ rfp }: { rfp: any }) {
-  const [showForm, setShowForm] = useState(false);
-  const [requirements, setRequirements] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [scoreResult, setScoreResult] = useState<any>(null);
+/* ---------- Types (same file) ---------- */
+
+interface Rfp {
+  _id: string;
+  title: string;
+  portal_name: string;
+  description?: string | null;
+  url?: string;
+  score?: number | null;
+  enriched?: boolean;
+}
+
+interface ScoreResult {
+  score: number;
+  reasoning: string;
+  breakdown?: Record<string, number>;
+}
+
+/* ---------- Component ---------- */
+
+export function RfpCard({ rfp }: { rfp: Rfp }) {
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [requirements, setRequirements] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
 
   const cleanTitle = rfp.title.split("\n")[0];
 
@@ -32,7 +46,11 @@ export function RfpCard({ rfp }: { rfp: any }) {
         }
       );
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error("Scoring failed");
+      }
+
+      const data: ScoreResult = await res.json();
       setScoreResult(data);
       setShowForm(false);
     } catch (err) {
@@ -43,10 +61,10 @@ export function RfpCard({ rfp }: { rfp: any }) {
   }
 
   return (
-    <Card className="flex h-full flex-col bg-card text-card-foreground border border-border hover:shadow-md transition-shadow">
+    <Card className="h-full flex flex-col hover:shadow-md transition-all">
       {/* ---------- Header ---------- */}
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-base font-semibold break-words">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold whitespace-normal break-words">
           {cleanTitle}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
@@ -55,58 +73,56 @@ export function RfpCard({ rfp }: { rfp: any }) {
       </CardHeader>
 
       {/* ---------- Content ---------- */}
-      <CardContent className="flex-1 space-y-3 text-sm">
-        <p className="text-muted-foreground line-clamp-3">
+      <CardContent className="flex-1 space-y-3">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           {rfp.description ?? "No description provided"}
         </p>
 
-        {/* Score Result */}
+        {/* ---------- Score Result ---------- */}
         {scoreResult && (
-          <div className="rounded-md border border-border bg-muted p-3">
+          <div className="rounded-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 text-sm">
             <p className="font-medium">
               Relevance Score: {(scoreResult.score * 100).toFixed(0)}%
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-xs mt-1 text-gray-700 dark:text-gray-300">
               {scoreResult.reasoning}
             </p>
           </div>
         )}
 
-        {/* Input Form */}
+        {/* ---------- Input Form ---------- */}
         {showForm && (
           <div className="space-y-2">
             <textarea
-              className="w-full rounded-md border border-border bg-background p-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-md border p-2 text-sm bg-background"
               rows={3}
               placeholder="Describe your requirements..."
               value={requirements}
               onChange={(e) => setRequirements(e.target.value)}
             />
 
-            <div className="flex justify-end">
-              <Button
-                size="sm"
-                onClick={checkRelevance}
-                disabled={loading || !requirements}
-              >
-                {loading ? "Scoring..." : "Submit"}
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              onClick={checkRelevance}
+              disabled={loading || !requirements}
+            >
+              {loading ? "Scoring..." : "Submit"}
+            </Button>
           </div>
         )}
       </CardContent>
 
-      {/* ---------- Footer ---------- */}
+      {/* ---------- Footer Button ---------- */}
       {!scoreResult && !showForm && (
-        <CardFooter className="flex justify-end border-t border-border pt-3">
+        <div className="p-4 pt-0 flex justify-end">
           <Button
             variant="outline"
-            size="sm"
+            className="w-auto"
             onClick={() => setShowForm(true)}
           >
             Check Relevance
           </Button>
-        </CardFooter>
+        </div>
       )}
     </Card>
   );
