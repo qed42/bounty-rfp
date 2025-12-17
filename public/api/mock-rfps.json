@@ -1,0 +1,5 @@
+[
+  { "title": "Drupal Website Redesign", "deadline": "2025-10-10", "budget": "$60,000", "status": "Open" },
+  { "title": "React Native App Dev", "deadline": "2025-10-05", "budget": "$120,000", "status": "Qualified" },
+  { "title": "CMS Migration to Drupal 10", "deadline": "2025-09-30", "budget": "$45,000", "status": "Under Review" }
+]
