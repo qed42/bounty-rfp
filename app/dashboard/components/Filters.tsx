@@ -77,16 +77,6 @@ export function Filters({
 
       {/* -------- Row 1 -------- */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div>
-          <Label className="mb-2 block" htmlFor="keyword">
-            Keyword
-          </Label>
-          <Input
-            id="keyword"
-            value={localFilters.keyword}
-            onChange={(e) => update("keyword", e.target.value)}
-          />
-        </div>
 
         <div>
           <Label className="mb-2 block" htmlFor="min_budget">
@@ -159,12 +149,19 @@ export function Filters({
             inputId="tech-stack-select"
             isMulti
             options={[
-              { label: "Drupal", value: "drupal" },
+              { label: "Artificial Intelligence", value: "artificial_intelligence" },
+              { label: "Drupal Development", value: "drupal_development" },
+              { label: "Website", value: "website" },
+              { label: "Web Page", value: "web_page" },
+              { label: "Content Management System", value: "content_management_system" },
+              { label: "GenAI", value: "genai" },
+              { label: "Government Websites", value: "government_websites" },
               { label: "React", value: "react" },
-              { label: "Node", value: "node" },
-              { label: "AI / GenAI", value: "ai" },
-              { label: "Web Development", value: "Web Development" },
-              { label: "CMS", value: "cms" },
+              { label: "WordPress", value: "wordpress" },
+              { label: "Mobile App", value: "mobile_app" },
+              { label: "Data Visualization", value: "data_visualization" },
+              { label: "Next JS", value: "next_js" },
+              { label: "Javascript", value: "javascript" },
             ]}
             value={localFilters.tech_stack}
             onChange={(v) => handleSelectChange("tech_stack", v)}
