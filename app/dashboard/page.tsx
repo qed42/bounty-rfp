@@ -164,7 +164,7 @@ export default function DashboardPage() {
         {/* End of Results */}
         {!hasMore && rfps.length > 0 && (
           <div className="text-center py-4 text-sm text-gray-500 dark:text-neutral-400">
-            You've reached the end of the results
+            You have reached the end of the results
           </div>
         )}
       </div>
