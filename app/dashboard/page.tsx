@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Filters } from "./components/Filters";
 import { RfpCardCardView } from "./components/RfpCard";
-import { RfpCardListView } from "./components/RfpListItem";
+import { RfpListItem } from "./components/RfpListItem";
 import { buildRfpQuery } from "../../lib/rfpApi";
 import { Button } from "@/components/ui/button";
 import { Option } from "../../lib/locationApi";
@@ -175,7 +175,7 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-4">
             {rfps.map((rfp) => (
-              <RfpCardListView key={String(rfp["_id"])} rfp={rfp} />
+              <RfpListItem key={String(rfp["_id"])} rfp={rfp} />
             ))}
           </div>
         )}

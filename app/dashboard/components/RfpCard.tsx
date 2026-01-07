@@ -4,19 +4,38 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { RelevancePanel } from "./RelevancePanel";
 
+/* ---------------- Types ---------------- */
+
 interface RfpCardProps {
   rfp: Record<string, unknown>;
 }
 
-function renderValue(value: unknown) {
+/* ---------------- Helpers ---------------- */
+
+function getString(
+  obj: Record<string, unknown>,
+  key: string
+): string | null {
+  const value = obj[key];
+  return typeof value === "string" ? value : null;
+}
+
+function renderValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
   if (Array.isArray(value)) return value.join(", ");
   return String(value);
 }
 
+/* ---------------- Component ---------------- */
+
 export function RfpCardCardView({ rfp }: RfpCardProps) {
-  const portalUrl =
-    typeof rfp.url === "string" && rfp.url.length > 0 ? rfp.url : "#";
+  const title = getString(rfp, "title") ?? "Untitled RFP";
+  const description = getString(rfp, "description");
+  const portalName = getString(rfp, "portal_name");
+  const rfpType = getString(rfp, "rfp_type");
+  const location = getString(rfp, "location");
+  const portalUrl = getString(rfp, "url") ?? "#";
+  const rfpId = getString(rfp, "_id");
 
   return (
     <Link
@@ -32,47 +51,62 @@ export function RfpCardCardView({ rfp }: RfpCardProps) {
           hover:border-blue-600 dark:hover:border-blue-500
         "
       >
-        {/* HEADER */}
+        {/* ---------------- Header ---------------- */}
         <h3 className="text-lg font-semibold leading-snug">
-          {String(rfp.title ?? "Untitled RFP")}
+          {title}
         </h3>
 
+        {/* ---------------- Badges ---------------- */}
         <div className="mt-2 flex flex-wrap gap-2">
-          {rfp.portal_name && (
+          {portalName && (
             <Badge variant="secondary">
-              {String(rfp.portal_name)}
+              {portalName}
             </Badge>
           )}
-          {rfp.rfp_type && (
+
+          {rfpType && (
             <Badge variant="outline">
-              {String(rfp.rfp_type)}
+              {rfpType}
             </Badge>
           )}
-          {rfp.location && (
+
+          {location && (
             <Badge variant="outline">
-              {String(rfp.location)}
+              {location}
             </Badge>
           )}
         </div>
 
-        {/* DESCRIPTION */}
-        {rfp.description && (
-          <p className="mt-4 text-sm text-muted-foreground whitespace-pre-line">
-            {String(rfp.description)}
+        {/* ---------------- Description ---------------- */}
+        {description && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            {description}
           </p>
         )}
 
-        {/* DETAILS */}
+        {/* ---------------- Details ---------------- */}
         <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-          <div><strong>Organization:</strong> {renderValue(rfp.organization)}</div>
-          <div><strong>Reference:</strong> {renderValue(rfp.reference)}</div>
-          <div><strong>Published:</strong> {renderValue(rfp.published_date)}</div>
-          <div><strong>Deadline:</strong> {renderValue(rfp.deadline)}</div>
+          <div>
+            <strong>Organization:</strong>{" "}
+            {renderValue(rfp.organization)}
+          </div>
+          <div>
+            <strong>Reference:</strong>{" "}
+            {renderValue(rfp.reference)}
+          </div>
+          <div>
+            <strong>Published:</strong>{" "}
+            {renderValue(rfp.published_date)}
+          </div>
+          <div>
+            <strong>Deadline:</strong>{" "}
+            {renderValue(rfp.deadline)}
+          </div>
         </div>
 
-        {/* RELEVANCE */}
-        {typeof rfp._id === "string" && (
-          <RelevancePanel rfpId={rfp._id} />
+        {/* ---------------- Relevance ---------------- */}
+        {rfpId && (
+          <RelevancePanel rfpId={rfpId} />
         )}
       </div>
     </Link>

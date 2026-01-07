@@ -1,13 +1,17 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import type { Props } from "react-select";
+import React from "react";
+import Select, { Props } from "react-select";
 
-// dynamic import → SSR disabled
-const Select = dynamic(() => import("react-select"), {
-  ssr: false,
-});
-
-export default Select as unknown as <Option, IsMulti extends boolean>(
+/**
+ * Typed wrapper around react-select
+ * Works with Next.js App Router + TS strict mode
+ */
+const ClientSelect = Select as unknown as <
+  Option,
+  IsMulti extends boolean = false
+>(
   props: Props<Option, IsMulti>
-) => JSX.Element;
+) => React.ReactElement;
+
+export default ClientSelect;

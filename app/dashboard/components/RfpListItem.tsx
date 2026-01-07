@@ -4,19 +4,35 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { RelevancePanel } from "./RelevancePanel";
 
-interface RfpCardProps {
+interface RfpListItemProps {
   rfp: Record<string, unknown>;
 }
 
-function renderValue(value: unknown) {
+function renderValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
-  if (Array.isArray(value)) return value.join(", ");
+  if (Array.isArray(value)) return value.map(String).join(", ");
   return String(value);
 }
 
-export function RfpCardListView({ rfp }: RfpCardProps) {
+export function RfpListItem({ rfp }: RfpListItemProps) {
   const portalUrl =
-    typeof rfp.url === "string" && rfp.url.length > 0 ? rfp.url : "#";
+    typeof rfp.url === "string" && rfp.url.trim().length > 0
+      ? rfp.url
+      : "#";
+
+  // 🔒 NORMALIZE EVERYTHING FIRST (this is mandatory)
+  const title = renderValue(rfp.title ?? "Untitled RFP");
+  const portalName =
+    rfp.portal_name !== undefined ? renderValue(rfp.portal_name) : null;
+  const rfpType =
+    rfp.rfp_type !== undefined ? renderValue(rfp.rfp_type) : null;
+  const deadline = renderValue(rfp.deadline);
+  const description =
+    rfp.description !== undefined ? renderValue(rfp.description) : null;
+  const organization = renderValue(rfp.organization);
+  const reference = renderValue(rfp.reference);
+  const location = renderValue(rfp.location);
+  const rfpId = typeof rfp._id === "string" ? rfp._id : null;
 
   return (
     <Link
@@ -28,53 +44,57 @@ export function RfpCardListView({ rfp }: RfpCardProps) {
       <div
         className="
           rounded-xl border bg-white dark:bg-neutral-950 p-5
-          hover:shadow-md transition cursor-pointer
+          transition cursor-pointer
+          hover:shadow-md
           hover:border-blue-600 dark:hover:border-blue-500
         "
       >
         {/* HEADER */}
         <div className="flex justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold">
-              {String(rfp.title ?? "Untitled RFP")}
-            </h3>
+            <h3 className="text-lg font-semibold">{title}</h3>
 
             <div className="mt-1 flex flex-wrap gap-2">
-              {rfp.portal_name && (
-                <Badge variant="secondary">
-                  {String(rfp.portal_name)}
-                </Badge>
+              {portalName && (
+                <Badge variant="secondary">{portalName}</Badge>
               )}
-              {rfp.rfp_type && (
-                <Badge variant="outline">
-                  {String(rfp.rfp_type)}
-                </Badge>
+
+              {rfpType && (
+                <Badge variant="outline">{rfpType}</Badge>
               )}
             </div>
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            Deadline: {renderValue(rfp.deadline)}
+          <div className="text-sm text-muted-foreground whitespace-nowrap">
+            <strong>Deadline:</strong> {deadline}
           </div>
         </div>
 
         {/* DESCRIPTION */}
-        {rfp.description && (
-          <p className="mt-3 text-sm text-muted-foreground line-clamp-3">
-            {String(rfp.description)}
+        {description && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            {description}
           </p>
         )}
 
-        {/* META */}
-        <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-          <div><strong>Org:</strong> {renderValue(rfp.organization)}</div>
-          <div><strong>Ref:</strong> {renderValue(rfp.reference)}</div>
-          <div><strong>Location:</strong> {renderValue(rfp.location)}</div>
+        {/* META DETAILS */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+          <div>
+            <strong>Organization:</strong> {organization}
+          </div>
+          <div>
+            <strong>Reference:</strong> {reference}
+          </div>
+          <div>
+            <strong>Location:</strong> {location}
+          </div>
         </div>
 
         {/* RELEVANCE */}
-        {typeof rfp._id === "string" && (
-          <RelevancePanel rfpId={rfp._id} />
+        {rfpId && (
+          <div className="mt-4">
+            <RelevancePanel rfpId={rfpId} />
+          </div>
         )}
       </div>
     </Link>

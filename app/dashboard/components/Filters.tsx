@@ -14,6 +14,7 @@ import { fetchCountries, Option } from "../../../lib/locationApi";
 type FiltersState = {
   keyword: string;
   min_budget: number;
+  sector: Option[];
   country: Option[];
   rfp_type: Option[];
   deadline_days: number;
@@ -36,6 +37,7 @@ const DEFAULT_FILTERS: FiltersState = {
   keyword: "",
   min_budget: 0,
   country: [],
+  sector: [],
   rfp_type: [],
   deadline_days: 0,
   tech_stack: [],
@@ -230,9 +232,10 @@ export function Filters({
                 : null
             }
             onChange={(v) => {
-              setTechCategory(v?.value ?? null);
+              const selected = v as { label: string; value: TechCategory } | null;
+              setTechCategory(selected?.value ?? null);
               update("tech_stack", []);
-            }}
+            }}            
           />
         </div>
 
