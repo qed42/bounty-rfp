@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Filters } from "./components/Filters";
-import { RfpCard } from "./components/RfpCard";
-import { RfpListItem } from "./components/RfpListItem";
+import { RfpCardCardView } from "./components/RfpCard";
+import { RfpCardListView } from "./components/RfpListItem";
 import { buildRfpQuery } from "../../lib/rfpApi";
 import { Button } from "@/components/ui/button";
 import { Option } from "../../lib/locationApi";
@@ -114,34 +114,39 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">
             RFP Intelligence Dashboard
           </h1>
-
         </div>
 
         {/* Filters */}
         <Filters filters={filters} onChange={handleFilterChange} />
 
         {/* View Toggle */}
-        <div className="inline-flex rounded-lg border bg-white dark:bg-neutral-900 p-2 gap-2">
-          <Button
-            variant="toggle"
-            active={viewMode === "card"}
+        <div className="inline-flex rounded-lg border bg-white dark:bg-neutral-900 p-1 gap-1">
+          <button
+            type="button"
             onClick={() => setViewMode("card")}
+            className={`px-4 py-2 text-sm rounded-md transition cursor-pointer
+              ${
+                viewMode === "card"
+                  ? "bg-primary text-white"
+                  : "text-muted-foreground hover:bg-muted dark:hover:bg-neutral-800"
+              }`}
           >
             Card
-          </Button>
+          </button>
 
-          <Button
-            variant="toggle"
-            active={viewMode === "list"}
+          <button
+            type="button"
             onClick={() => setViewMode("list")}
+            className={`px-4 py-2 text-sm rounded-md transition cursor-pointer
+              ${
+                viewMode === "list"
+                  ? "bg-primary text-white"
+                  : "text-muted-foreground hover:bg-muted dark:hover:bg-neutral-800"
+              }`}
           >
             List
-          </Button>
+          </button>
         </div>
-
-
-
-
 
         {/* Error */}
         {error && (
@@ -149,21 +154,32 @@ export default function DashboardPage() {
             {error}
           </div>
         )}
-
-        {/* ---------------- Card View ---------------- */}
-        {viewMode === "card" ? (
+        
+        {/* ---------------- Card / List / Empty State ---------------- */}
+        {!loading && rfps.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center border rounded-lg bg-white dark:bg-neutral-900">
+            <p className="text-lg font-medium">
+              No RFPs found
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md">
+              Try adjusting your filters, removing some constraints, or expanding
+              the deadline and tech stack selections.
+            </p>
+          </div>
+        ) : viewMode === "card" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {rfps.map((rfp) => (
-              <RfpCard key={String(rfp["_id"])} rfp={rfp} />
+              <RfpCardCardView key={String(rfp["_id"])} rfp={rfp} />
             ))}
           </div>
         ) : (
           <div className="space-y-4">
             {rfps.map((rfp) => (
-              <RfpListItem key={String(rfp["_id"])} rfp={rfp} />
+              <RfpCardListView key={String(rfp["_id"])} rfp={rfp} />
             ))}
           </div>
-)}
+        )}
+
 
         {/* Load More */}
         {hasMore && (

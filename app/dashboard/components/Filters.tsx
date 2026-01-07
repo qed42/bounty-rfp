@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Select, { OnChangeValue } from "react-select";
+import Select from "@/components/ui/ClientSelect";
+import { OnChangeValue } from "react-select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,7 @@ type FiltersState = {
   country: Option[];
   rfp_type: Option[];
   deadline_days: number;
-  tech_stack: Option[];
+  tech_stack: Option[]; // FINAL payload field
   portal_names: Option[];
   exclude_onsite: boolean;
 };
@@ -73,9 +74,7 @@ const TECH_STACK_MAP: Record<TechCategory, Option[]> = {
     { label: "Data Visualization", value: "data visualization" },
   ],
   mobile: [{ label: "Mobile App", value: "mobile app" }],
-  government: [
-    { label: "Government Websites", value: "government websites" },
-  ],
+  government: [{ label: "Government Websites", value: "government websites" }],
 };
 
 /* ---------------- Component ---------------- */
@@ -126,6 +125,39 @@ export function Filters({
   ) {
     update(key, (v ?? []) as Option[]);
   }
+
+  /* -------- Build FINAL payload -------- */
+
+  function buildPayload(): FiltersState {
+    let finalTechStack: Option[] = [];
+  
+    // CASE 1: Parent selected, NO children
+    if (techCategory && localFilters.tech_stack.length === 0) {
+      const parent = TECH_CATEGORIES.find(
+        (c) => c.value === techCategory
+      );
+  
+      if (parent) {
+        finalTechStack = [{ label: parent.label, value: parent.value }];
+      }
+    }
+  
+    // CASE 2: Parent + children selected → ONLY children
+    if (techCategory && localFilters.tech_stack.length > 0) {
+      finalTechStack = localFilters.tech_stack;
+    }
+  
+    // CASE 3: No parent
+    if (!techCategory) {
+      finalTechStack = [];
+    }
+  
+    return {
+      ...localFilters,
+      tech_stack: finalTechStack,
+    };
+  }
+  
 
   /* ---------------- UI ---------------- */
 
@@ -261,7 +293,8 @@ export function Filters({
         >
           Reset
         </Button>
-        <Button onClick={() => onChange(localFilters)}>
+
+        <Button onClick={() => onChange(buildPayload())}>
           Apply Filters
         </Button>
       </div>
