@@ -1,129 +1,109 @@
-import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
-/* ---------- Types (same file) ---------- */
-
-interface Rfp {
-  _id: string;
-  title: string;
-  portal_name: string;
-  description?: string | null;
-  url?: string;
-  score?: number | null;
-  enriched?: boolean;
+interface RfpCardProps {
+  rfp: Record<string, unknown>;
 }
 
-interface ScoreResult {
-  score: number;
-  reasoning: string;
-  breakdown?: Record<string, number>;
-}
+function renderValue(value: unknown) {
+  if (value === null || value === undefined) return "—";
 
-/* ---------- Component ---------- */
-
-export function RfpCard({ rfp }: { rfp: Rfp }) {
-  const [showForm, setShowForm] = useState<boolean>(false);
-  const [requirements, setRequirements] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
-
-  const cleanTitle = rfp.title.split("\n")[0];
-
-  async function checkRelevance() {
-    try {
-      setLoading(true);
-
-      const res = await fetch(
-        "http://65.2.128.237:8000/api/v1/scoring/score",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            rfp_id: rfp._id,
-            user_requirements: requirements,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Scoring failed");
-      }
-
-      const data: ScoreResult = await res.json();
-      setScoreResult(data);
-      setShowForm(false);
-    } catch (err) {
-      console.error("Scoring failed", err);
-    } finally {
-      setLoading(false);
-    }
+  if (Array.isArray(value)) {
+    return value.length ? value.join(", ") : "—";
   }
 
+  if (typeof value === "object") {
+    return Object.keys(value as object).length
+      ? JSON.stringify(value, null, 2)
+      : "—";
+  }
+
+  return String(value);
+}
+
+export function RfpCard({ rfp }: RfpCardProps) {
+  const portalUrl =
+    typeof rfp.url === "string" && rfp.url.length > 0 ? rfp.url : "#";
+
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-all">
-      {/* ---------- Header ---------- */}
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold whitespace-normal break-words">
-          {cleanTitle}
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Source: {rfp.portal_name}
-        </p>
-      </CardHeader>
+    <Link
+      href={portalUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block h-full"
+    >
+      <div
+        className="
+          h-full rounded-xl border bg-white dark:bg-neutral-950 p-5
+          hover:shadow-lg transition cursor-pointer
+          hover:border-blue-600 dark:hover:border-blue-500
+        "
+      >
+        {/* ================= HEADER ================= */}
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold leading-snug">
+            {String(rfp.title ?? "Untitled RFP")}
+          </h3>
 
-      {/* ---------- Content ---------- */}
-      <CardContent className="flex-1 space-y-3">
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          {rfp.description ?? "No description provided"}
-        </p>
-
-        {/* ---------- Score Result ---------- */}
-        {scoreResult && (
-          <div className="rounded-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 text-sm">
-            <p className="font-medium">
-              Relevance Score: {(scoreResult.score * 100).toFixed(0)}%
-            </p>
-            <p className="text-xs mt-1 text-gray-700 dark:text-gray-300">
-              {scoreResult.reasoning}
-            </p>
+          <div className="flex flex-wrap gap-2">
+            {rfp.portal_name && (
+              <Badge variant="secondary">
+                {String(rfp.portal_name)}
+              </Badge>
+            )}
+            {rfp.rfp_type && (
+              <Badge variant="outline">
+                {String(rfp.rfp_type)}
+              </Badge>
+            )}
+            {rfp.location && (
+              <Badge variant="outline">
+                {String(rfp.location)}
+              </Badge>
+            )}
           </div>
-        )}
-
-        {/* ---------- Input Form ---------- */}
-        {showForm && (
-          <div className="space-y-2">
-            <textarea
-              className="w-full rounded-md border p-2 text-sm bg-background"
-              rows={3}
-              placeholder="Describe your requirements..."
-              value={requirements}
-              onChange={(e) => setRequirements(e.target.value)}
-            />
-
-            <Button
-              size="sm"
-              onClick={checkRelevance}
-              disabled={loading || !requirements}
-            >
-              {loading ? "Scoring..." : "Submit"}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-
-      {/* ---------- Footer Button ---------- */}
-      {!scoreResult && !showForm && (
-        <div className="p-4 pt-0 flex justify-end">
-          <Button
-            variant="outline"
-            className="w-auto"
-            onClick={() => setShowForm(true)}
-          >
-            Check Relevance
-          </Button>
         </div>
-      )}
-    </Card>
+
+        {/* ================= DESCRIPTION ================= */}
+        {rfp.description && (
+          <p className="mt-4 text-sm text-muted-foreground whitespace-pre-line">
+            {String(rfp.description)}
+          </p>
+        )}
+
+        {/* ================= KEY DETAILS ================= */}
+        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <strong>Organization:</strong>{" "}
+            {renderValue(rfp.organization)}
+          </div>
+          <div>
+            <strong>Reference:</strong>{" "}
+            {renderValue(rfp.reference)}
+          </div>
+          <div>
+            <strong>Published:</strong>{" "}
+            {renderValue(rfp.published_date)}
+          </div>
+          <div>
+            <strong>Deadline:</strong>{" "}
+            {renderValue(rfp.deadline)}
+          </div>
+          <div>
+            <strong>Estimated Cost:</strong>{" "}
+            {renderValue(rfp.estimated_cost)}
+          </div>
+          <div>
+            <strong>Category:</strong>{" "}
+            {renderValue(rfp.category)}
+          </div>
+        </div>
+
+        {/* ================= FOOTER ================= */}
+        <div className="mt-4 text-xs text-muted-foreground">
+          Scraped at: {renderValue(rfp.scraped_at)}
+        </div>
+      </div>
+    </Link>
   );
 }

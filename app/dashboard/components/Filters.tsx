@@ -1,4 +1,3 @@
-// filter.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { fetchCountries, Option } from "../../../lib/locationApi";
+
+/* ---------------- Types ---------------- */
 
 type FiltersState = {
   keyword: string;
@@ -20,6 +21,16 @@ type FiltersState = {
   exclude_onsite: boolean;
 };
 
+type TechCategory =
+  | "web"
+  | "cms"
+  | "frontend"
+  | "ai"
+  | "mobile"
+  | "government";
+
+/* ---------------- Constants ---------------- */
+
 const DEFAULT_FILTERS: FiltersState = {
   keyword: "",
   min_budget: 0,
@@ -31,6 +42,44 @@ const DEFAULT_FILTERS: FiltersState = {
   exclude_onsite: false,
 };
 
+const TECH_CATEGORIES: { label: string; value: TechCategory }[] = [
+  { label: "Web Development", value: "web" },
+  { label: "CMS", value: "cms" },
+  { label: "Frontend", value: "frontend" },
+  { label: "AI / Data", value: "ai" },
+  { label: "Mobile", value: "mobile" },
+  { label: "Government", value: "government" },
+];
+
+const TECH_STACK_MAP: Record<TechCategory, Option[]> = {
+  web: [
+    { label: "Website", value: "website" },
+    { label: "Web Page", value: "web_page" },
+    { label: "Javascript", value: "javascript" },
+    { label: "Next JS", value: "next js" },
+  ],
+  cms: [
+    { label: "Drupal Development", value: "drupal development" },
+    { label: "WordPress", value: "wordpress" },
+    {
+      label: "Content Management System",
+      value: "content management system",
+    },
+  ],
+  frontend: [{ label: "React", value: "react" }],
+  ai: [
+    { label: "Artificial Intelligence", value: "artificial intelligence" },
+    { label: "GenAI", value: "genai" },
+    { label: "Data Visualization", value: "data visualization" },
+  ],
+  mobile: [{ label: "Mobile App", value: "mobile app" }],
+  government: [
+    { label: "Government Websites", value: "government websites" },
+  ],
+};
+
+/* ---------------- Component ---------------- */
+
 export function Filters({
   filters,
   onChange,
@@ -39,12 +88,15 @@ export function Filters({
   onChange: (filters: FiltersState) => void;
 }) {
   const [countries, setCountries] = useState<Option[]>([]);
+  const [techCategory, setTechCategory] = useState<TechCategory | null>(null);
+
   const [localFilters, setLocalFilters] = useState<FiltersState>({
     ...DEFAULT_FILTERS,
     ...filters,
   });
 
-  /* -------- Fetch countries dynamically -------- */
+  /* -------- Fetch Countries -------- */
+
   useEffect(() => {
     async function loadCountries() {
       const data = await fetchCountries();
@@ -53,9 +105,13 @@ export function Filters({
     loadCountries();
   }, []);
 
+  /* -------- Sync external filters -------- */
+
   useEffect(() => {
     setLocalFilters({ ...DEFAULT_FILTERS, ...filters });
   }, [filters]);
+
+  /* -------- Helpers -------- */
 
   function update<K extends keyof FiltersState>(
     key: K,
@@ -64,12 +120,14 @@ export function Filters({
     setLocalFilters((prev) => ({ ...prev, [key]: value }));
   }
 
-  const handleSelectChange = (
+  function handleSelectChange(
     key: keyof FiltersState,
     v: OnChangeValue<Option, true>
-  ) => {
+  ) {
     update(key, (v ?? []) as Option[]);
-  };
+  }
+
+  /* ---------------- UI ---------------- */
 
   return (
     <div className="rounded-xl border bg-white dark:bg-neutral-950 p-6 space-y-6">
@@ -77,13 +135,9 @@ export function Filters({
 
       {/* -------- Row 1 -------- */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-
         <div>
-          <Label className="mb-2 block" htmlFor="min_budget">
-            Min Budget
-          </Label>
+          <Label className="mb-2 block">Min Budget</Label>
           <Input
-            id="min_budget"
             type="number"
             value={localFilters.min_budget}
             onChange={(e) =>
@@ -93,11 +147,8 @@ export function Filters({
         </div>
 
         <div>
-          <Label className="mb-2 block" htmlFor="country-select">
-            Country
-          </Label>
+          <Label className="mb-2 block">Country</Label>
           <Select
-            inputId="country-select"
             isMulti
             options={countries}
             value={localFilters.country}
@@ -106,11 +157,8 @@ export function Filters({
         </div>
 
         <div>
-          <Label className="mb-2 block" htmlFor="rfp-type-select">
-            RFP Type
-          </Label>
+          <Label className="mb-2 block">RFP Type</Label>
           <Select
-            inputId="rfp-type-select"
             isMulti
             options={[
               { label: "RFP", value: "RFP" },
@@ -125,11 +173,8 @@ export function Filters({
         </div>
 
         <div>
-          <Label className="mb-2 block" htmlFor="deadline_days">
-            Deadline (Days)
-          </Label>
+          <Label className="mb-2 block">Deadline (Days)</Label>
           <Input
-            id="deadline_days"
             type="number"
             value={localFilters.deadline_days}
             onChange={(e) =>
@@ -142,38 +187,44 @@ export function Filters({
       {/* -------- Row 2 -------- */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div>
-          <Label className="mb-2 block" htmlFor="tech-stack-select">
-            Tech Stack
-          </Label>
+          <Label className="mb-2 block">Tech Category</Label>
           <Select
-            inputId="tech-stack-select"
-            isMulti
-            options={[
-              { label: "Artificial Intelligence", value: "artificial intelligence" },
-              { label: "Drupal Development", value: "drupal development" },
-              { label: "Website", value: "website" },
-              { label: "Web Page", value: "web_page" },
-              { label: "Content Management System", value: "content management system" },
-              { label: "GenAI", value: "genai" },
-              { label: "Government Websites", value: "government websites" },
-              { label: "React", value: "react" },
-              { label: "WordPress", value: "wordpress" },
-              { label: "Mobile App", value: "mobile app" },
-              { label: "Data Visualization", value: "data visualization" },
-              { label: "Next JS", value: "next js" },
-              { label: "Javascript", value: "javascript" },
-            ]}
-            value={localFilters.tech_stack}
-            onChange={(v) => handleSelectChange("tech_stack", v)}
+            options={TECH_CATEGORIES}
+            value={
+              techCategory
+                ? TECH_CATEGORIES.find(
+                    (c) => c.value === techCategory
+                  )
+                : null
+            }
+            onChange={(v) => {
+              setTechCategory(v?.value ?? null);
+              update("tech_stack", []);
+            }}
           />
         </div>
 
         <div>
-          <Label className="mb-2 block" htmlFor="portals-select">
-            Portals
-          </Label>
+          <Label className="mb-2 block">Tech Stack</Label>
           <Select
-            inputId="portals-select"
+            isMulti
+            isDisabled={!techCategory}
+            options={
+              techCategory ? TECH_STACK_MAP[techCategory] : []
+            }
+            value={localFilters.tech_stack}
+            onChange={(v) => handleSelectChange("tech_stack", v)}
+            placeholder={
+              techCategory
+                ? "Select tech stack"
+                : "Select tech category first"
+            }
+          />
+        </div>
+
+        <div>
+          <Label className="mb-2 block">Portals</Label>
+          <Select
             isMulti
             options={[
               { label: "Merx", value: "Merx" },
@@ -182,25 +233,32 @@ export function Filters({
               { label: "InstantMarkets", value: "InstantMarkets" },
             ]}
             value={localFilters.portal_names}
-            onChange={(v) => handleSelectChange("portal_names", v)}
+            onChange={(v) =>
+              handleSelectChange("portal_names", v)
+            }
           />
         </div>
 
         <div className="flex items-center gap-3 pt-7">
           <Switch
-            id="exclude_onsite"
             checked={localFilters.exclude_onsite}
             onCheckedChange={(v) =>
               update("exclude_onsite", v)
             }
           />
-          <Label htmlFor="exclude_onsite">Exclude Onsite</Label>
+          <Label>Exclude Onsite</Label>
         </div>
       </div>
 
       {/* -------- Actions -------- */}
       <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={() => onChange(DEFAULT_FILTERS)}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setTechCategory(null);
+            onChange(DEFAULT_FILTERS);
+          }}
+        >
           Reset
         </Button>
         <Button onClick={() => onChange(localFilters)}>

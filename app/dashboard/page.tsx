@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { Filters } from "./components/Filters";
 import { RfpCard } from "./components/RfpCard";
+import { RfpListItem } from "./components/RfpListItem";
 import { buildRfpQuery } from "../../lib/rfpApi";
 import { Button } from "@/components/ui/button";
-import type { Option } from "../../lib/locationApi";
+import { Option } from "../../lib/locationApi";
 
 const PAGE_SIZE = 9;
 
@@ -14,6 +15,7 @@ const PAGE_SIZE = 9;
 export interface FiltersState {
   keyword: string;
   min_budget: number;
+  sector: Option[];
   country: Option[];
   rfp_type: Option[];
   tech_stack: Option[];
@@ -22,19 +24,15 @@ export interface FiltersState {
   exclude_onsite: boolean;
 }
 
-export type Rfp = {
-  _id: string;
-  [key: string]: unknown;
-  title: string;
-  portal_name: string;
-};
+type ViewMode = "card" | "list";
 
-/* ---------------- Component ---------------- */
+/* ---------------- Page ---------------- */
 
 export default function DashboardPage() {
   const [filters, setFilters] = useState<FiltersState>({
     keyword: "",
     min_budget: 0,
+    sector: [],
     country: [],
     rfp_type: [],
     tech_stack: [],
@@ -43,18 +41,20 @@ export default function DashboardPage() {
     exclude_onsite: false,
   });
 
-  const [rfps, setRfps] = useState<Rfp[]>([]);
+  const [rfps, setRfps] = useState<Record<string, unknown>[]>([]);
   const [skip, setSkip] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
 
   /* ---------------- Fetch RFPs ---------------- */
 
   useEffect(() => {
     const controller = new AbortController();
 
-    const fetchRfps = async (reset: boolean) => {
+    async function fetchRfps(reset = false) {
       try {
         setLoading(true);
         setError(null);
@@ -74,7 +74,7 @@ export default function DashboardPage() {
           throw new Error(`API Error: ${res.status}`);
         }
 
-        const data = (await res.json()) as Rfp[];
+        const data = (await res.json()) as Record<string, unknown>[];
 
         setRfps((prev) => (reset ? data : [...prev, ...data]));
         setHasMore(data.length === PAGE_SIZE);
@@ -85,86 +85,92 @@ export default function DashboardPage() {
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchRfps(skip === 0);
-
     return () => controller.abort();
   }, [filters, skip]);
 
   /* ---------------- Handlers ---------------- */
 
-  const handleFilterChange = (newFilters: FiltersState) => {
+  function handleFilterChange(newFilters: FiltersState) {
     setFilters(newFilters);
     setSkip(0);
     setRfps([]);
     setHasMore(true);
-  };
+  }
 
-  const handleLoadMore = () => {
+  function handleLoadMore() {
     setSkip((prev) => prev + PAGE_SIZE);
-  };
+  }
 
   /* ---------------- UI ---------------- */
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          RFP Intelligence Dashboard
-        </h1>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">
+            RFP Intelligence Dashboard
+          </h1>
 
+        </div>
+
+        {/* Filters */}
         <Filters filters={filters} onChange={handleFilterChange} />
 
+        {/* View Toggle */}
+        <div className="inline-flex rounded-lg border bg-white dark:bg-neutral-900 p-2 gap-2">
+          <Button
+            variant="toggle"
+            active={viewMode === "card"}
+            onClick={() => setViewMode("card")}
+          >
+            Card
+          </Button>
+
+          <Button
+            variant="toggle"
+            active={viewMode === "list"}
+            onClick={() => setViewMode("list")}
+          >
+            List
+          </Button>
+        </div>
+
+
+
+
+
+        {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
+          <div className="bg-red-50 border border-red-200 p-4 rounded">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rfps.map((rfp) => (
-            <RfpCard key={rfp._id} rfp={rfp} />
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {!loading && rfps.length === 0 && !error && (
-          <div className="text-center py-12 bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">
-              No RFPs found
-            </h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">
-              Try adjusting your filters to see more results
-            </p>
+        {/* ---------------- Card View ---------------- */}
+        {viewMode === "card" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rfps.map((rfp) => (
+              <RfpCard key={String(rfp["_id"])} rfp={rfp} />
+            ))}
           </div>
-        )}
+        ) : (
+          <div className="space-y-4">
+            {rfps.map((rfp) => (
+              <RfpListItem key={String(rfp["_id"])} rfp={rfp} />
+            ))}
+          </div>
+)}
 
-        {hasMore && rfps.length > 0 && (
-          <div className="flex justify-center">
+        {/* Load More */}
+        {hasMore && (
+          <div className="flex justify-center pt-4">
             <Button onClick={handleLoadMore} disabled={loading}>
               {loading ? "Loading..." : "Load More"}
             </Button>
-          </div>
-        )}
-
-        {/* End of Results */}
-        {!hasMore && rfps.length > 0 && (
-          <div className="text-center py-4 text-sm text-gray-500 dark:text-neutral-400">
-            You have reached the end of the results
           </div>
         )}
       </div>
