@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { RelevancePanel } from "./RelevancePanel";
+import { getString, getStringArray, renderValue } from "@/lib/rfpHelpers";
+
 
 /* ---------------- Types ---------------- */
 
@@ -10,72 +12,53 @@ interface RfpCardProps {
   rfp: Record<string, unknown>;
 }
 
-/* ---------------- Helpers ---------------- */
-
-function getString(
-  obj: Record<string, unknown>,
-  key: string
-): string | null {
-  const value = obj[key];
-  return typeof value === "string" ? value : null;
-}
-
-function renderValue(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  if (Array.isArray(value)) return value.join(", ");
-  return String(value);
-}
-
 /* ---------------- Component ---------------- */
 
 export function RfpCardCardView({ rfp }: RfpCardProps) {
   const title = getString(rfp, "title") ?? "Untitled RFP";
   const description = getString(rfp, "description");
-  const portalName = getString(rfp, "portal_name");
-  const rfpType = getString(rfp, "rfp_type");
-  const location = getString(rfp, "location");
   const portalUrl = getString(rfp, "url") ?? "#";
   const rfpId = getString(rfp, "_id");
 
+  // Metadata
+  const portalName = getString(rfp, "portal_name");
+  const rfpType = getString(rfp, "rfp_type");
+  const location = getString(rfp, "location");
+
+  // Tags
+  const tags = getStringArray(rfp, "tags");
+
   return (
-    <Link
-      href={portalUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block h-full"
-    >
+    <div>
       <div
         className="
           h-full rounded-xl border bg-white dark:bg-neutral-950 p-5
-          hover:shadow-lg transition cursor-pointer
+          hover:shadow-lg transition 
           hover:border-blue-600 dark:hover:border-blue-500
         "
       >
-        {/* ---------------- Header ---------------- */}
-        <h3 className="text-lg font-semibold leading-snug">
-          {title}
-        </h3>
+        {/* ---------------- Title ---------------- */}
+        <Link
+          href={portalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block cursor-pointer"
+        >
+          <h3 className="text-lg font-semibold leading-snug">
+            {title}
+          </h3>
+        </Link>
 
-        {/* ---------------- Badges ---------------- */}
-        <div className="mt-2 flex flex-wrap gap-2">
-          {portalName && (
-            <Badge variant="secondary">
-              {portalName}
-            </Badge>
-          )}
-
-          {rfpType && (
-            <Badge variant="outline">
-              {rfpType}
-            </Badge>
-          )}
-
-          {location && (
-            <Badge variant="outline">
-              {location}
-            </Badge>
-          )}
-        </div>
+        {/* ---------------- Tags (BADGES) ---------------- */}
+        {tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {tags.slice(0, 6).map((tag) => (
+              <Badge key={tag} variant="secondary">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {/* ---------------- Description ---------------- */}
         {description && (
@@ -84,8 +67,23 @@ export function RfpCardCardView({ rfp }: RfpCardProps) {
           </p>
         )}
 
-        {/* ---------------- Details ---------------- */}
+        {/* ---------------- Metadata ---------------- */}
         <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+          {portalName && (
+            <div>
+              <strong>Portal:</strong> {portalName}
+            </div>
+          )}
+          {rfpType && (
+            <div>
+              <strong>RFP Type:</strong> {rfpType}
+            </div>
+          )}
+          {location && (
+            <div>
+              <strong>Location:</strong> {location}
+            </div>
+          )}
           <div>
             <strong>Organization:</strong>{" "}
             {renderValue(rfp.organization)}
@@ -105,10 +103,9 @@ export function RfpCardCardView({ rfp }: RfpCardProps) {
         </div>
 
         {/* ---------------- Relevance ---------------- */}
-        {rfpId && (
-          <RelevancePanel rfpId={rfpId} />
-        )}
+        {rfpId && <RelevancePanel rfpId={rfpId} />}
       </div>
-    </Link>
+    </div>
   );
 }
+

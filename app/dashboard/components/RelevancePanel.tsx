@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface ScoreResult {
   score: number;
-  reasoning: string;
+  why_relevant: string;
   breakdown?: Record<string, number>;
 }
 
@@ -14,53 +14,59 @@ const DEFAULT_DESCRIPTION =
 export function RelevancePanel({ rfpId }: { rfpId: string }) {
   const [loading, setLoading] = useState(false);
   const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function checkRelevance() {
-      try {
-        setLoading(true);
+  async function checkRelevance() {
+    if (loading) return;
 
-        const res = await fetch(
-          "http://65.2.128.237:8000/api/v1/scoring/score",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              rfp_id: rfpId,
-              user_requirements: DEFAULT_DESCRIPTION,
-            }),
-          }
-        );
+    try {
+      setLoading(true);
+      setError(null);
 
-        if (!res.ok) throw new Error("Scoring failed");
+      const res = await fetch(
+        "http://65.2.128.237:8000/api/v1/scoring/score",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rfp_id: rfpId,
+            user_requirements: DEFAULT_DESCRIPTION,
+          }),
+        }
+      );
 
-        const data: ScoreResult = await res.json();
-        setScoreResult(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+      if (!res.ok) throw new Error("Scoring failed");
+
+      const data: ScoreResult = await res.json();
+      setScoreResult(data);
+    } catch (e) {
+      console.error(e);
+      setError("Unable to check relevance. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    checkRelevance();
-  }, [rfpId]);
+  }
 
   return (
     <div
       className="mt-4 space-y-2 text-sm"
       onClick={(e) => e.stopPropagation()} // prevents card click
     >
-      {/* Static description */}
-      <p className="text-muted-foreground">
-        {DEFAULT_DESCRIPTION}
-      </p>
+      {/* Action button */}
+      {!scoreResult && (
+        <button
+          onClick={checkRelevance}
+          disabled={loading}
+          className="rounded-md border px-3 py-1.5 text-xs font-medium cursor-pointer
+                     hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Checking relevance..." : "Check Relevance"}
+        </button>
+      )}
 
-      {/* Loading state */}
-      {loading && (
-        <p className="text-xs text-muted-foreground">
-          Checking relevance...
-        </p>
+      {/* Error */}
+      {error && (
+        <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
       )}
 
       {/* Result */}
@@ -70,7 +76,7 @@ export function RelevancePanel({ rfpId }: { rfpId: string }) {
             Relevance Score: {(scoreResult.score * 100).toFixed(0)}%
           </p>
           <p className="text-xs mt-1 text-muted-foreground">
-            {scoreResult.reasoning}
+            {scoreResult.why_relevant}
           </p>
         </div>
       )}
