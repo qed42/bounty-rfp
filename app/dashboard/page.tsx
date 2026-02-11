@@ -7,6 +7,7 @@ import { RfpListItem } from "./components/RfpListItem";
 import { buildRfpQuery } from "../../lib/rfpApi";
 import { Button } from "@/components/ui/button";
 import { Option } from "../../lib/locationApi";
+import config from "@/data/config.json";
 
 const PAGE_SIZE = 9;
 
@@ -66,7 +67,7 @@ export default function DashboardPage() {
         });
 
         const res = await fetch(
-          `http://65.2.128.237:8000/api/v1/rfps/?${query}`,
+          `${config.baseUrl}/rfps/?${query}`,
           { signal: controller.signal }
         );
 

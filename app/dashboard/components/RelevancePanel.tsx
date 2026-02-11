@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import config from "@/data/config.json";
 
 interface ScoreResult {
   score: number;
@@ -24,7 +25,7 @@ export function RelevancePanel({ rfpId }: { rfpId: string }) {
       setError(null);
 
       const res = await fetch(
-        "http://65.2.128.237:8000/api/v1/scoring/score",
+        `${config.baseUrl}/rfps/scoring/score`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

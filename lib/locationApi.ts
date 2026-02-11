@@ -1,4 +1,5 @@
 // locationApi.ts
+import config from "@/data/config.json";
 
 // Structure required by react-select
 export type Option = {
@@ -13,9 +14,7 @@ type RfpItem = {
 
 export async function fetchCountries(): Promise<Option[]> {
   try {
-    const res = await fetch(
-      "http://65.2.128.237:8000/api/v1/rfps/?limit=500"
-    );
+    const res = await fetch(`${config.baseUrl}/rfps/?limit=500`);
 
     if (!res.ok) {
       console.error("Failed to fetch RFPs data:", res.statusText);

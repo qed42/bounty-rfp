@@ -25,6 +25,20 @@ export function RfpListItem({ rfp }: RfpListItemProps) {
   const title = getString(rfp, "title") ?? "Untitled RFP";
   const description = getString(rfp, "description");
   const rfpId = getString(rfp, "_id");
+  
+  // score
+  const score =
+  typeof rfp.score === "number" ? rfp.score : null;
+  const scoreBreakdown =
+    rfp.score_breakdown as
+      | {
+          keyword_matches?: number;
+          budget_present?: number;
+          deadline_present?: number;
+          matched_keywords_count?: number;
+          matched_keywords_list?: string[];
+        }
+      | undefined;
 
   // Metadata (NOT tags)
   const portalName = getString(rfp, "portal_name");
@@ -82,9 +96,63 @@ export function RfpListItem({ rfp }: RfpListItemProps) {
 
         {/* ---------------- Description ---------------- */}
         {description && (
-          <p className="mt-4 text-sm text-muted-foreground">
+          <p className="mt-4 text-sm text-muted-foreground  ">
             {description}
           </p>
+        )}
+
+
+        {scoreBreakdown && (
+          <div className="py-4 border-t border-b text-sm text-muted-foreground flex flex-wrap w-full justify-evenly items-center gap-4 mt-4">
+            {/* ---------------- Score ---------------- */}
+            {score !== null && (
+              <div className="flex items-center justify-between">
+                <Badge
+                  variant="outline"
+                  className="text-blue-600 border-blue-600"
+                >
+                  Score: {(score * 100).toFixed(0)}%
+                </Badge>
+              </div>
+            )}
+            {scoreBreakdown.keyword_matches !== undefined && (
+              <div>
+                <strong>Keyword Match:</strong>{" "}
+                {(scoreBreakdown.keyword_matches * 100).toFixed(0)}%
+              </div>
+            )}
+
+            {scoreBreakdown.budget_present !== undefined && (
+              <div>
+                <strong>Budget Signal:</strong>{" "}
+                {(scoreBreakdown.budget_present * 100).toFixed(0)}%
+              </div>
+            )}
+
+            {scoreBreakdown.deadline_present !== undefined && (
+              <div>
+                <strong>Deadline Signal:</strong>{" "}
+                {(scoreBreakdown.deadline_present * 100).toFixed(0)}%
+              </div>
+            )}
+
+            {scoreBreakdown.matched_keywords_list &&
+              scoreBreakdown.matched_keywords_list.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <strong>Matched Keywords:</strong>
+                  <div className="flex flex-wrap gap-1">
+                    {scoreBreakdown.matched_keywords_list.map((kw) => (
+                      <span
+                        key={kw}
+                        className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700"
+                      >
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+          </div>
         )}
 
         {/* ---------------- Metadata ---------------- */}
