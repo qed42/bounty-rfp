@@ -10,6 +10,10 @@ interface RfpQueryFilters {
   deadline_days?: number;
   skip?: number;
   limit?: number;
+
+  // add sort fields
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
 }
 
 export function buildRfpQuery(filters: RfpQueryFilters): string {
@@ -48,6 +52,15 @@ export function buildRfpQuery(filters: RfpQueryFilters): string {
 
     params.set("deadline_from", today.toISOString().split("T")[0]);
     params.set("deadline_to", future.toISOString().split("T")[0]);
+  }
+
+  // add sort params
+  if (filters.sort_by) {
+    params.set("sort_by", filters.sort_by);
+  }
+
+  if (filters.sort_order) {
+    params.set("sort_order", filters.sort_order);
   }
 
   params.set("skip", String(filters.skip ?? 0));

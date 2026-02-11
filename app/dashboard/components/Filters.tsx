@@ -18,9 +18,13 @@ type FiltersState = {
   country: Option[];
   rfp_type: Option[];
   deadline_days: number;
-  tech_stack: Option[]; // FINAL payload field
+  tech_stack: Option[];
   portal_names: Option[];
   exclude_onsite: boolean;
+
+  // sort fields
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
 };
 
 type TechCategory =
@@ -43,6 +47,10 @@ const DEFAULT_FILTERS: FiltersState = {
   tech_stack: [],
   portal_names: [],
   exclude_onsite: false,
+
+  // default sort
+  sort_by: "deadline",
+  sort_order: "asc",
 };
 
 const TECH_CATEGORIES: { label: string; value: TechCategory }[] = [
@@ -132,34 +140,43 @@ export function Filters({
 
   function buildPayload(): FiltersState {
     let finalTechStack: Option[] = [];
-  
-    // CASE 1: Parent selected, NO children
+
     if (techCategory && localFilters.tech_stack.length === 0) {
       const parent = TECH_CATEGORIES.find(
         (c) => c.value === techCategory
       );
-  
+
       if (parent) {
         finalTechStack = [{ label: parent.label, value: parent.value }];
       }
     }
-  
-    // CASE 2: Parent + children selected → ONLY children
+
     if (techCategory && localFilters.tech_stack.length > 0) {
       finalTechStack = localFilters.tech_stack;
     }
-  
-    // CASE 3: No parent
+
     if (!techCategory) {
       finalTechStack = [];
     }
-  
+
     return {
       ...localFilters,
       tech_stack: finalTechStack,
     };
   }
-  
+
+  /* -------- Sort handler (instant apply) -------- */
+
+  function handleSortChange(sort_by: string, sort_order: "asc" | "desc") {
+    const updated = {
+      ...localFilters,
+      sort_by,
+      sort_order,
+    };
+
+    setLocalFilters(updated);
+    onChange(updated);
+  }
 
   /* ---------------- UI ---------------- */
 
@@ -232,10 +249,12 @@ export function Filters({
                 : null
             }
             onChange={(v) => {
-              const selected = v as { label: string; value: TechCategory } | null;
+              const selected = v as
+                | { label: string; value: TechCategory }
+                | null;
               setTechCategory(selected?.value ?? null);
               update("tech_stack", []);
-            }}            
+            }}
           />
         </div>
 
@@ -282,6 +301,84 @@ export function Filters({
             }
           />
           <Label>Exclude Onsite</Label>
+        </div>
+      </div>
+
+      {/* -------- Sort Section -------- */}
+      <div>
+        <Label className="mb-2 block">Sort By</Label>
+        <div className="flex flex-wrap gap-4 text-sm">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="sort"
+              checked={
+                localFilters.sort_by === "deadline" &&
+                localFilters.sort_order === "asc"
+              }
+              onChange={() =>
+                handleSortChange("deadline", "asc")
+              }
+            />
+            Deadline ↑
+          </label>
+
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="sort"
+              checked={
+                localFilters.sort_by === "deadline" &&
+                localFilters.sort_order === "desc"
+              }
+              onChange={() =>
+                handleSortChange("deadline", "desc")
+              }
+            />
+            Deadline ↓
+          </label>
+
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="sort"
+              checked={
+                localFilters.sort_by === "score" &&
+                localFilters.sort_order === "desc"
+              }
+              onChange={() =>
+                handleSortChange("score", "desc")
+              }
+            />
+            Score ↓
+          </label>
+
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="sort"
+              checked={
+                localFilters.sort_by === "score" &&
+                localFilters.sort_order === "asc"
+              }
+              onChange={() =>
+                handleSortChange("score", "asc")
+              }
+            />
+            Score ↑
+          </label>
+
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="sort"
+              checked={localFilters.sort_by === "title"}
+              onChange={() =>
+                handleSortChange("title", "asc")
+              }
+            />
+            Title A–Z
+          </label>
         </div>
       </div>
 
