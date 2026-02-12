@@ -3,11 +3,13 @@ import { Option } from "./locationApi";
 interface RfpQueryFilters {
   keyword?: string;
   min_budget?: number;
+  sector?: Option[];
   country?: Option[];
   rfp_type?: Option[];
   tech_stack?: Option[];
   portal_names?: Option[];
   deadline_days?: number;
+  exclude_onsite?: boolean;
   skip?: number;
   limit?: number;
 
