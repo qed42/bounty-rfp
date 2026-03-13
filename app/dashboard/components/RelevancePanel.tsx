@@ -25,7 +25,7 @@ export function RelevancePanel({ rfpId }: { rfpId: string }) {
       setError(null);
 
       const res = await fetch(
-        `${config.baseUrl}/rfps/scoring/score`,
+        `${config.baseUrl}/scoring/score`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
