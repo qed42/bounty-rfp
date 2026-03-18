@@ -285,6 +285,7 @@ export function Filters({
               { label: "UNGM", value: "UNGM" },
               { label: "GlobalTenders", value: "GlobalTenders" },
               { label: "InstantMarkets", value: "InstantMarkets" },
+              { label: "DCOE", value: "DCOE" },
             ]}
             value={localFilters.portal_names}
             onChange={(v) =>
