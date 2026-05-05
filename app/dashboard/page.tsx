@@ -20,8 +20,8 @@ export default async function DashboardPage() {
   });
 
   const res = await fetch(
-    `${config.baseUrl}/rfps/?${query}`,
-    { cache: "no-store" } // forces SSR
+    `${config.serverBaseUrl}/rfps/?${query}`,
+    { cache: "no-store" }
   );
 
   if (!res.ok) {
